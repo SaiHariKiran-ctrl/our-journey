@@ -1,10 +1,8 @@
 // src/components/JourneySection.tsx
 'use client';
 
-import { useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
-import Image from 'next/image';
 
 interface JourneySectionProps {
   title: string;

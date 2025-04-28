@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { events, isEventToday } from '@/lib/events';
-import { memories } from '@/lib/memories';
-import { todos as initialTodos } from '@/lib/todos';
-import { Todo } from '@/lib/todos';
+import { events, isEventToday } from '../lib/events';
+import { memories } from '../lib/memories';
+import { todos as initialTodos } from '../lib/todos';
+import { Todo } from '../lib/todos';
 import Image from 'next/image';
 import Link from 'next/link';
 

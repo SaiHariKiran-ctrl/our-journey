@@ -1,28 +1,15 @@
 // src/app/memories/page.tsx
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Memory } from '@/lib/types';
-import { getMemories } from '@/lib/storage';
-import MemoryCard from '@/components/MemoryCard';
-import { memories } from '@/lib/memories';
 import Image from 'next/image';
+import { memories } from '../../lib/memories';
 
 export default function MemoriesPage() {
-  const [memories, setMemories] = useState<Memory[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    // Load memories when component mounts
-    const loadedMemories = getMemories();
-    
-    // Sort by date (newest first)
-    loadedMemories.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    
-    setMemories(loadedMemories);
-    setIsLoading(false);
-  }, []);
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
 
   return (
     <div className="min-h-screen p-8">

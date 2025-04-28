@@ -3,7 +3,7 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import JourneySection from '@/components/JourneySection';
+import JourneySection from '../../components/JourneySection';
 
 export default function JourneyPage() {
   const router = useRouter();

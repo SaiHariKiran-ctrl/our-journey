@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Memory } from '@/lib/types';
-import { getMemoryById } from '@/lib/storage';
+import { Memory } from '../../../lib/types';
+import { getMemoryById } from '../../../lib/storage';
 import dayjs from 'dayjs';
 import { motion } from 'framer-motion';
 

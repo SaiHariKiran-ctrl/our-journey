@@ -2,7 +2,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Memory } from '@/lib/types';
+import { Memory } from '../lib/types';
 import { motion } from 'framer-motion';
 import dayjs from 'dayjs';
 

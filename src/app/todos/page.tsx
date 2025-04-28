@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { todos as initialTodos } from '@/lib/todos';
-import { Todo } from '@/lib/todos';
+import { todos as initialTodos } from '../../lib/todos';
+import { Todo } from '../../lib/todos';
 import Link from 'next/link';
 
 export default function TodosPage() {

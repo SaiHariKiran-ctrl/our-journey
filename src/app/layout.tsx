@@ -2,7 +2,7 @@
 
 import './globals.css';
 import { Inter } from 'next/font/google';
-import Sidebar from '@/components/Sidebar';
+import Sidebar from '../components/Sidebar';
 import { useState } from 'react';
 import { FaBars } from 'react-icons/fa';
 import Link from 'next/link';

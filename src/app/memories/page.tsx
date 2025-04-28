@@ -31,7 +31,7 @@ export default function MemoriesPage() {
           <h1 className="text-4xl font-bold text-white">All Memories</h1>
           <div className="flex items-center gap-4">
             <Link href="/memories/add" className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg transition-colors">
-              New Memory
+              Add New Memory
             </Link>
             <Link href="/" className="text-primary hover:text-primary-dark">
               ← Back to Home

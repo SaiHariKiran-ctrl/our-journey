@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { addMemory } from '@/lib/storage';
-import { Memory } from '@/lib/types';
+import { addMemory } from '../../../lib/storage';
+import { Memory } from '../../../lib/types';
 import dayjs from 'dayjs';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";

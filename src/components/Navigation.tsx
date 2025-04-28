@@ -34,7 +34,7 @@ export default function Navigation() {
           </ul>
         </div>
       </nav>
-      <Sidebar />
+      <Sidebar isOpen={true} onClose={() => {}} />
     </>
   );
 }

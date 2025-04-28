@@ -1,29 +1,45 @@
-// src/app/memories/[id]/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Memory } from '@/lib/types';
 import { getMemoryById } from '@/lib/storage';
 import dayjs from 'dayjs';
 import { motion } from 'framer-motion';
 
-export default function MemoryDetailPage({ params }: { params: { id: string } }) {
+type PageProps = {
+  params: Promise<{ id: string }>;
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
+export default function MemoryDetailPage({ params }: PageProps) {
   const [memory, setMemory] = useState<Memory | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const router = useRouter();
+  const [memoryId, setMemoryId] = useState<string | null>(null);
 
   useEffect(() => {
-    // Load the memory when component mounts
-    const foundMemory = getMemoryById(params.id);
-    
-    if (foundMemory) {
-      setMemory(foundMemory);
-    }
-    
-    setIsLoading(false);
-  }, [params.id]);
+    const loadParams = async () => {
+      const resolvedParams = await params;
+      setMemoryId(resolvedParams.id);
+    };
+    loadParams();
+  }, [params]);
+
+  useEffect(() => {
+    if (!memoryId) return;
+
+    const loadMemory = async () => {
+      const foundMemory = getMemoryById(memoryId);
+      
+      if (foundMemory) {
+        setMemory(foundMemory);
+      }
+      
+      setIsLoading(false);
+    };
+
+    loadMemory();
+  }, [memoryId]);
 
   if (isLoading) {
     return (
@@ -37,7 +53,7 @@ export default function MemoryDetailPage({ params }: { params: { id: string } })
     return (
       <div className="text-center py-12 bg-gray-50 rounded-lg">
         <h3 className="text-xl font-medium text-gray-600 mb-2">Memory not found</h3>
-        <p className="text-gray-500 mb-6">The memory you're looking for doesn't exist</p>
+        <p className="text-gray-500 mb-6">The memory you&apos;re looking for doesn&apos;t exist</p>
         <Link 
           href="/memories"
           className="bg-purple-500 hover:bg-purple-600 text-white py-2 px-6 rounded-lg transition-colors duration-200"

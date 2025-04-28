@@ -34,7 +34,7 @@ export default function JourneyPage() {
     {
       id: 'growing-together',
       title: 'Growing Together',
-      content: 'Through challenges and celebrations, we\'ve grown together. I\'ve loved watching us become better versions of ourselves.',
+      content: 'Through challenges and celebrations, we&apos;ve grown together. I&apos;ve loved watching us become better versions of ourselves.',
       imageUrl: '/images/growing.jpg',
       backgroundColor: 'bg-green-100',
     },
@@ -88,7 +88,7 @@ export default function JourneyPage() {
       <div className="text-center py-12 bg-gradient-to-b from-transparent to-pink-100 mt-16">
         <h2 className="text-3xl font-bold text-purple-700 mb-4">The End... For Now</h2>
         <p className="text-lg text-purple-600">
-          Our journey continues! Let's check out our Memory Box next...
+          Our journey continues! Let&apos;s check out our Memory Box next...
         </p>
       </div>
     </div>

@@ -2,10 +2,12 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useState } from 'react';
 import Sidebar from './Sidebar';
 
 export default function Navigation() {
   const pathname = usePathname();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const navItems = [
     { label: 'Home', path: '/' },
@@ -34,7 +36,7 @@ export default function Navigation() {
           </ul>
         </div>
       </nav>
-      <Sidebar />
+      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
     </>
   );
 }

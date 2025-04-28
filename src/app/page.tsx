@@ -1,103 +1,305 @@
-import Image from "next/image";
+'use client';
+
+import { useState, useEffect } from 'react';
+import { events, isEventToday } from '@/lib/events';
+import { memories } from '@/lib/memories';
+import { todos as initialTodos } from '@/lib/todos';
+import { Todo } from '@/lib/todos';
+import Image from 'next/image';
+import Link from 'next/link';
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const todayEvents = events.filter(event => isEventToday(event.date));
+  const mainEvent = todayEvents[0];
+  const [displayedMemories, setDisplayedMemories] = useState(3);
+  const [todos, setTodos] = useState<Todo[]>(initialTodos);
+  const [timeTogether, setTimeTogether] = useState({
+    seconds: 0,
+    minutes: 0,
+    hours: 0,
+    days: 0,
+    months: 0,
+    years: 0
+  });
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  useEffect(() => {
+    const startDate = new Date('2025-03-20'); 
+    
+    const calculateTimeTogether = () => {
+      const now = new Date();
+      const diff = now.getTime() - startDate.getTime();
+      
+      const seconds = Math.floor(diff / 1000);
+      const minutes = Math.floor(seconds / 60);
+      const hours = Math.floor(minutes / 60);
+      const days = Math.floor(hours / 24);
+      const months = Math.floor(days / 30.44); 
+      const years = Math.floor(months / 12);
+      
+      setTimeTogether({
+        seconds: seconds % 60,
+        minutes: minutes % 60,
+        hours: hours % 24,
+        days: days % 30,
+        months: months % 12,
+        years: years
+      });
+    };
+
+    calculateTimeTogether();
+    
+    const interval = setInterval(calculateTimeTogether, 1000);
+    
+    return () => clearInterval(interval);
+  }, []);
+
+  const latestTodos = [...todos]
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 5);
+
+  const latestMemories = [...memories]
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, displayedMemories);
+
+  const toggleTodo = (id: string) => {
+    setTodos(todos.map(todo => 
+      todo.id === id ? { ...todo, isCompleted: !todo.isCompleted } : todo
+    ));
+  };
+
+  const deleteTodo = (id: string) => {
+    setTodos(todos.filter(todo => todo.id !== id));
+  };
+
+  const loadMoreMemories = () => {
+    setDisplayedMemories(prev => prev + 3);
+  };
+
+  return (
+    <div className="min-h-screen">
+      <div className="hero rounded-2xl my-8 backdrop-blur-md">
+        {todayEvents.length > 0 ? (
+          <>
+            <div className="mb-12">
+              <h1 className="text-5xl md:text-7xl font-bold text-white mb-6">
+                {mainEvent.title}
+              </h1>
+              <p className="text-xl md:text-2xl text-secondary">
+                {mainEvent.description}
+              </p>
+            </div>
+
+            {todayEvents.length > 1 && (
+              <div className="mb-12">
+                <h2 className="text-2xl font-bold text-white mb-6">Today&apos;s Events</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {todayEvents.slice(1).map((event) => (
+                    <div key={event.id} className="glass-effect p-6 rounded-xl backdrop-blur-sm">
+                      <div className="flex items-center gap-4 mb-3">
+                        <span className="text-3xl">
+                          {event.type === 'birthday' ? '🎂' : event.type === 'anniversary' ? '💑' : '🎉'}
+                        </span>
+                        <h3 className="text-xl font-bold text-white">{event.title}</h3>
+                      </div>
+                      <p className="text-text-secondary mb-2">{new Date(event.date).toLocaleDateString()}</p>
+                      {event.description && (
+                        <p className="text-text-secondary">{event.description}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
+        ) : (
+          <h1 className="text-5xl md:text-7xl font-bold text-white mb-6">
+          </h1>
+        )}
+      </div>
+
+      <div className="glass-effect rounded-2xl p-8 mb-8 backdrop-blur-md">
+        <h2 className="text-3xl font-bold text-white mb-6">Our Journey</h2>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div className="text-center p-4 rounded-xl bg-white/10">
+            <div className="text-4xl font-bold text-white mb-2">{timeTogether.seconds}</div>
+            <div className="text-text-secondary text-sm">Seconds</div>
+          </div>
+          <div className="text-center p-4 rounded-xl bg-white/10">
+            <div className="text-4xl font-bold text-white mb-2">{timeTogether.minutes}</div>
+            <div className="text-text-secondary text-sm">Minutes</div>
+          </div>
+          <div className="text-center p-4 rounded-xl bg-white/10">
+            <div className="text-4xl font-bold text-white mb-2">{timeTogether.hours}</div>
+            <div className="text-text-secondary text-sm">Hours</div>
+          </div>
+          <div className="text-center p-4 rounded-xl bg-white/10">
+            <div className="text-4xl font-bold text-white mb-2">{timeTogether.days}</div>
+            <div className="text-text-secondary text-sm">Days</div>
+          </div>
+          <div className="text-center p-4 rounded-xl bg-white/10">
+            <div className="text-4xl font-bold text-white mb-2">{timeTogether.months}</div>
+            <div className="text-text-secondary text-sm">Months</div>
+          </div>
+          <div className="text-center p-4 rounded-xl bg-white/10">
+            <div className="text-4xl font-bold text-white mb-2">{timeTogether.years}</div>
+            <div className="text-text-secondary text-sm">Years</div>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </div>
+
+      {memories.length > 0 && (
+        <div className="mt-16">
+          <h2 className="text-2xl font-bold text-white mb-8">Highlighted Memories</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {latestMemories.slice(0, displayedMemories).map((memory) => (
+              <div key={memory.id} className="glass-effect rounded-xl overflow-hidden backdrop-blur-sm transform transition-all duration-300 hover:scale-[1.02] hover:shadow-lg">
+                {memory.imageUrl && (
+                  <div className="relative h-48 w-full group">
+                    <Image
+                      src={memory.imageUrl}
+                      alt={memory.title}
+                      fill
+                      className="object-cover transition-transform duration-300 group-hover:scale-110"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  </div>
+                )}
+                <div className="p-6">
+                  <h3 className="text-xl font-bold text-white mb-2 group-hover:text-primary transition-colors duration-300">{memory.title}</h3>
+                  <p className="text-text-secondary mb-2">{new Date(memory.date).toLocaleDateString()}</p>
+                  <p className="text-text-secondary line-clamp-2">{memory.description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          {memories.length > displayedMemories && (
+            <div className="mt-8 text-center">
+              <button
+                onClick={loadMoreMemories}
+                className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all duration-300 hover:scale-105 backdrop-blur-sm"
+              >
+                See More Memories
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+      
+      <div className="mt-16">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold text-white">To Do List</h2>
+          <Link href="/todos" className="text-primary hover:text-primary-dark">
+            View All Tasks →
+          </Link>
+        </div>
+
+        <div className="glass-effect rounded-xl overflow-hidden">
+          <table className="w-full">
+            <thead>
+              <tr className="bg-white/10">
+                <th className="p-4 text-left">Status</th>
+                <th className="p-4 text-left">Title</th>
+                <th className="p-4 text-left">Description</th>
+                <th className="p-4 text-left">Due Date</th>
+                <th className="p-4 text-left">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {latestTodos.map((todo) => (
+                <tr key={todo.id} className="border-t border-white/10">
+                  <td className="p-4">
+                    <input
+                      type="checkbox"
+                      checked={todo.isCompleted}
+                      onChange={() => toggleTodo(todo.id)}
+                      className="w-5 h-5 rounded"
+                    />
+                  </td>
+                  <td className="p-4">
+                    <span className={todo.isCompleted ? 'line-through text-text-secondary' : ''}>
+                      {todo.title}
+                    </span>
+                  </td>
+                  <td className="p-4">
+                    <span className={todo.isCompleted ? 'line-through text-text-secondary' : ''}>
+                      {todo.description}
+                    </span>
+                  </td>
+                  <td className="p-4">
+                    {todo.dueDate && new Date(todo.dueDate).toLocaleDateString()}
+                  </td>
+                  <td className="p-4">
+                    <button
+                      onClick={() => deleteTodo(todo.id)}
+                      className="text-red-500 hover:text-red-700"
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div className="mt-16">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold text-white">Latest Memories</h2>
+          <Link href="/memories" className="text-primary hover:text-primary-dark">
+            View All Memories →
+          </Link>
+        </div>
+
+        <div className="glass-effect rounded-xl overflow-hidden">
+          <table className="w-full">
+            <thead>
+              <tr className="bg-white/10">
+                <th className="p-4 text-left">Image</th>
+                <th className="p-4 text-left">Title</th>
+                <th className="p-4 text-left">Date</th>
+                <th className="p-4 text-left">Description</th>
+                <th className="p-4 text-left">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {latestMemories.map((memory) => (
+                <tr key={memory.id} className="border-t border-white/10">
+                  <td className="p-4">
+                    {memory.imageUrl && (
+                      <div className="relative w-16 h-16">
+                        <Image
+                          src={memory.imageUrl}
+                          alt={memory.title}
+                          fill
+                          className="object-cover rounded-lg"
+                        />
+                      </div>
+                    )}
+                  </td>
+                  <td className="p-4">
+                    <span className="font-medium">{memory.title}</span>
+                  </td>
+                  <td className="p-4">
+                    {new Date(memory.date).toLocaleDateString()}
+                  </td>
+                  <td className="p-4">
+                    <span className="text-text-secondary">{memory.description}</span>
+                  </td>
+                  <td className="p-4">
+                    <button className="text-primary hover:text-primary-dark mr-4">
+                      Edit
+                    </button>
+                    <button className="text-red-500 hover:text-red-700">
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }

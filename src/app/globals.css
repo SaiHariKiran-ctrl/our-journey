@@ -38,7 +38,7 @@ body {
   .card-hover {
     @apply transition-all duration-300 hover:scale-[1.02] hover:shadow-xl;
   }
-  
+
   .glass-effect {
     @apply backdrop-blur-md bg-black/20 border border-white/10;
   }

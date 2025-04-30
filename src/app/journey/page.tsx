@@ -196,11 +196,11 @@ const JourneyPage = () => {
                                 transform:
                                     index === visibleIndex
                                         ? 'translateY(0)'
-                                        : scrollDirection === 'down'
-                                        ? 'translateY(100px)'
-                                        : 'translateY(-100px)',
+                                        : index < visibleIndex
+                                        ? 'translateY(-50px)'
+                                        : 'translateY(50px)',
                                 transition:
-                                    'opacity 0.5s ease-in-out, transform 0.5s ease-in-out',
+                                    'opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), transform 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
                                 zIndex: index === visibleIndex ? 10 : 1,
                                 pointerEvents: 'none',
                                 willChange: 'opacity, transform',

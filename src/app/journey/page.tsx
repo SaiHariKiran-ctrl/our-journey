@@ -38,6 +38,7 @@ const JourneyPage = () => {
     useEffect(() => {
         let lastScrollY = window.scrollY;
         let ticking = false;
+        let lastIndex = visibleIndex;
 
         const handleScroll = () => {
             if (!ticking) {
@@ -59,7 +60,7 @@ const JourneyPage = () => {
                         setShowScrollIndicator(false);
                     }
 
-                    // Calculate message index
+                    // Calculate message index with debounce
                     const messageHeight = viewportHeight * 1.5;
                     const totalScrollHeight = messageHeight * messages.length;
                     const scrollProgress = Math.min(
@@ -76,8 +77,10 @@ const JourneyPage = () => {
                         messages.length - 1
                     );
 
-                    if (newIndex !== visibleIndex) {
+                    // Only update if the index has actually changed
+                    if (newIndex !== lastIndex) {
                         setVisibleIndex(newIndex);
+                        lastIndex = newIndex;
                     }
 
                     // Show heart on last message
@@ -95,9 +98,10 @@ const JourneyPage = () => {
             }
         };
 
+        // Use passive scroll listener for better performance
         window.addEventListener('scroll', handleScroll, { passive: true });
         return () => window.removeEventListener('scroll', handleScroll);
-    }, [messages.length, showScrollIndicator, visibleIndex]);
+    }, [messages.length, showScrollIndicator]);
 
     // Particle effect component
     const Particles = () => {
@@ -186,23 +190,20 @@ const JourneyPage = () => {
                     {messages.map((msg, index) => (
                         <p
                             key={index}
-                            className="absolute left-0 right-0 px-8 text-2xl md:text-4xl text-white transition-all duration-1000 font-lucy font-normal"
+                            className="absolute left-0 right-0 px-8 text-2xl md:text-4xl text-white transition-all duration-500 font-lucy font-normal"
                             style={{
                                 opacity: index === visibleIndex ? 1 : 0,
-                                animation:
+                                transform:
                                     index === visibleIndex
-                                        ? scrollDirection === 'down'
-                                            ? 'fadeIn 1s ease-in-out'
-                                            : 'fadeInUp 1s ease-in-out'
-                                        : index === visibleIndex - 1 &&
-                                          scrollDirection === 'down'
-                                        ? 'fadeOut 1s ease-in-out'
-                                        : index === visibleIndex + 1 &&
-                                          scrollDirection === 'up'
-                                        ? 'fadeOutUp 1s ease-in-out'
-                                        : 'none',
+                                        ? 'translateY(0)'
+                                        : scrollDirection === 'down'
+                                        ? 'translateY(100px)'
+                                        : 'translateY(-100px)',
+                                transition:
+                                    'opacity 0.5s ease-in-out, transform 0.5s ease-in-out',
                                 zIndex: index === visibleIndex ? 10 : 1,
                                 pointerEvents: 'none',
+                                willChange: 'opacity, transform',
                             }}>
                             {msg}
                         </p>

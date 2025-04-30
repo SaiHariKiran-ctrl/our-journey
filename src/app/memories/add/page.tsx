@@ -1,18 +1,20 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { addMemory } from '../../../lib/storage';
+import { createMemory } from '../../actions';
 import { Memory } from '../../../lib/types';
 import dayjs from 'dayjs';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import './datepicker.css';
+import Image from 'next/image';
 
 export default function AddMemoryPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [formData, setFormData] = useState({
     title: '',
@@ -20,7 +22,10 @@ export default function AddMemoryPage() {
     description: '',
     location: '',
     tags: '',
+    imageUrls: [] as string[],
   });
+  
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   
   const [errors, setErrors] = useState<{
     title?: string;
@@ -37,6 +42,37 @@ export default function AddMemoryPage() {
     if (errors[name as keyof typeof errors]) {
       setErrors(prev => ({ ...prev, [name]: undefined }));
     }
+  };
+  
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+    
+    const newPreviewUrls: string[] = [];
+    const newImageUrls: string[] = [];
+    
+    Array.from(files).forEach(file => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const result = reader.result as string;
+        newPreviewUrls.push(result);
+        newImageUrls.push(result);
+        
+        if (newPreviewUrls.length === files.length) {
+          setPreviewUrls(prev => [...prev, ...newPreviewUrls]);
+          setFormData(prev => ({ ...prev, imageUrls: [...prev.imageUrls, ...newImageUrls] }));
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+  
+  const removeImage = (index: number) => {
+    setPreviewUrls(prev => prev.filter((_, i) => i !== index));
+    setFormData(prev => ({
+      ...prev,
+      imageUrls: prev.imageUrls.filter((_, i) => i !== index)
+    }));
   };
   
   const handleDateChange = (date: Date | null) => {
@@ -71,30 +107,31 @@ export default function AddMemoryPage() {
     return Object.keys(newErrors).length === 0;
   };
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!validateForm()) return;
-    
     setIsSubmitting(true);
     
     try {
-      const tagsArray = formData.tags
-        .split(',')
-        .map(tag => tag.trim())
-        .filter(tag => tag !== '');
+      const formDataToSubmit = new FormData();
+      formDataToSubmit.append('title', formData.title);
+      formDataToSubmit.append('date', formData.date);
+      formDataToSubmit.append('description', formData.description);
+      formDataToSubmit.append('location', formData.location);
+      formDataToSubmit.append('tags', formData.tags);
+      formData.imageUrls.forEach(url => {
+        formDataToSubmit.append('imageUrls', url);
+      });
       
-      const newMemory: Omit<Memory, 'id' | 'createdAt'> = {
-        title: formData.title,
-        date: formData.date,
-        description: formData.description,
-        location: formData.location || undefined,
-        tags: tagsArray.length > 0 ? tagsArray : undefined,
-      };
+      const result = await createMemory(formDataToSubmit);
       
-      addMemory(newMemory);
-      
-      router.push('/memories');
+      if (result.success) {
+        setIsSubmitting(true);
+        router.push('/memories');
+      } else {
+        throw new Error(result.error);
+      }
     } catch (error) {
       console.error('Error adding memory:', error);
       setIsSubmitting(false);
@@ -150,7 +187,7 @@ export default function AddMemoryPage() {
                 className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-white/10 focus:border-transparent transition-colors bg-black text-white
                   ${errors.date ? 'border-red-500' : 'border-white/10'}`}
                 placeholderText="Select a date"
-                maxDate={new Date()}
+                // maxDate={new Date()}
                 showYearDropdown
                 scrollableYearDropdown
                 yearDropdownItemNumber={100}
@@ -210,6 +247,54 @@ export default function AddMemoryPage() {
               <p className="mt-1 text-xs text-gray-400">
                 Separate tags with commas
               </p>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-white mb-1">
+                Images
+              </label>
+              <div className="space-y-4">
+                <div className="flex flex-wrap gap-4">
+                  {previewUrls.map((url, index) => (
+                    <div key={index} className="relative w-32 h-32">
+                      <Image
+                        src={url}
+                        alt={`Preview ${index + 1}`}
+                        fill
+                        className="object-cover rounded-lg"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeImage(index)}
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                
+                <div>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleImageChange}
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full px-4 py-2 border border-white/10 rounded-lg hover:border-white/20 transition-colors text-white"
+                  >
+                    Add Images
+                  </button>
+                  <p className="mt-1 text-xs text-gray-400">
+                    You can select multiple images
+                  </p>
+                </div>
+              </div>
             </div>
             
             <div className="flex justify-end pt-4">

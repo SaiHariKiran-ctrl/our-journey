@@ -3,6 +3,7 @@
 
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
+import Image from 'next/image';
 
 interface JourneySectionProps {
   title: string;
@@ -19,12 +20,10 @@ export default function JourneySection({
   backgroundColor,
   isEven,
 }: JourneySectionProps) {
-  // Use intersection observer to trigger animations when section is in view
   const [ref, inView] = useInView({
     triggerOnce: false,
     threshold: 0.3,
   });
-
   // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -61,51 +60,68 @@ export default function JourneySection({
     }
   };
 
+  const gradientBackgrounds = [
+    'bg-gradient-to-br from-pink-400/20 via-purple-400/20 to-blue-400/20',
+    'bg-gradient-to-br from-yellow-400/20 via-orange-400/20 to-red-400/20',
+    'bg-gradient-to-br from-green-400/20 via-teal-400/20 to-blue-400/20',
+    'bg-gradient-to-br from-purple-400/20 via-pink-400/20 to-red-400/20',
+    'bg-gradient-to-br from-blue-400/20 via-indigo-400/20 to-purple-400/20',
+  ];
+
   return (
     <section
       ref={ref}
-      className={`${backgroundColor} min-h-screen flex items-center py-16 px-4 md:px-8`}
+      className={`${gradientBackgrounds[Math.floor(Math.random() * gradientBackgrounds.length)]} p-8 md:p-12 rounded-xl backdrop-blur-sm`}
     >
       <motion.div 
-        className="container mx-auto grid md:grid-cols-2 gap-8 items-center"
+        className={`container mx-auto grid ${imageUrl ? 'md:grid-cols-2' : ''} gap-8 items-center`}
         variants={containerVariants}
         initial="hidden"
         animate={inView ? "visible" : "hidden"}
       >
-        {/* Image section */}
-        <motion.div 
-          className={`${isEven ? 'md:order-1' : 'md:order-2'}`}
+
+        {imageUrl && <motion.div
+          className={`${isEven ? 'md:order-1' : 'md:order-2'} group`}
           variants={imageVariants}
         >
-          <div className="relative h-64 md:h-96 rounded-xl overflow-hidden shadow-xl">
-            {/* This is a placeholder - replace with actual images */}
-            <div className="absolute inset-0 bg-gradient-to-br from-pink-300 to-purple-400 flex items-center justify-center">
-              <span className="text-6xl">📸</span>
-              <span className="absolute bottom-4 right-4 text-white text-sm bg-black bg-opacity-50 px-2 py-1 rounded">
-                Replace with: {imageUrl}
-              </span>
+          <div className="relative h-64 md:h-96 rounded-xl overflow-hidden transform transition-all duration-300 hover:scale-105">
+            <Image
+              src={imageUrl}
+              alt={title}
+              fill
+              className="object-cover transition-transform duration-300 group-hover:scale-110"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
+              <span className="text-white text-sm font-medium">✨ {title}</span>
             </div>
           </div>
         </motion.div>
+        }
         
         {/* Text section */}
         <motion.div className={`${isEven ? 'md:order-2' : 'md:order-1'} space-y-6`}>
           <motion.h2 
-            className="text-3xl md:text-4xl font-bold text-purple-700" 
+            className="text-3xl md:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-purple-500" 
             variants={itemVariants}
           >
             {title}
           </motion.h2>
           
           <motion.p 
-            className="text-lg text-purple-600"
+            className="text-lg text-white leading-relaxed"
             variants={itemVariants}
           >
             {content}
           </motion.p>
           
-          <motion.div variants={itemVariants}>
+          <motion.div 
+            className="flex items-center gap-2"
+            variants={itemVariants}
+          >
             <div className="h-1 w-24 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full"></div>
+            <span className="text-pink-400">❤️</span>
+            <div className="h-1 w-24 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"></div>
           </motion.div>
         </motion.div>
       </motion.div>

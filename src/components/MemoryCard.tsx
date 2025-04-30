@@ -1,10 +1,12 @@
 // src/components/MemoryCard.tsx
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
-import { Memory } from '../lib/types';
-import { motion } from 'framer-motion';
+import Image from 'next/image';
 import dayjs from 'dayjs';
+import { motion } from 'framer-motion';
+import { Memory } from '../lib/types';
 
 interface MemoryCardProps {
   memory: Memory;
@@ -12,6 +14,7 @@ interface MemoryCardProps {
 
 export default function MemoryCard({ memory }: MemoryCardProps) {
   const formattedDate = dayjs(memory.date).format('MMMM D, YYYY');
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   
   // Random pastel background color based on memory ID
   const getBackgroundColor = () => {
@@ -21,6 +24,18 @@ export default function MemoryCard({ memory }: MemoryCardProps) {
     ];
     const index = memory.id.charCodeAt(0) % colors.length;
     return colors[index];
+  };
+  
+  const nextImage = () => {
+    if (memory.imageUrls && memory.imageUrls.length > 0) {
+      setCurrentImageIndex((prev) => (prev + 1) % memory.imageUrls!.length);
+    }
+  };
+  
+  const prevImage = () => {
+    if (memory.imageUrls && memory.imageUrls.length > 0) {
+      setCurrentImageIndex((prev) => (prev - 1 + memory.imageUrls!.length) % memory.imageUrls!.length);
+    }
   };
   
   return (
@@ -33,8 +48,48 @@ export default function MemoryCard({ memory }: MemoryCardProps) {
     >
       <Link href={`/memories/${memory.id}`}>
         <div className={`h-40 ${getBackgroundColor()} relative`}>
-          {memory.imageUrl ? (
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-50"></div>
+          {memory.imageUrls && memory.imageUrls.length > 0 ? (
+            <>
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-50"></div>
+              <Image
+                src={memory.imageUrls[currentImageIndex]}
+                alt={memory.title}
+                fill
+                className="object-cover"
+              />
+              {memory.imageUrls.length > 1 && (
+                <>
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      prevImage();
+                    }}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/30 hover:bg-white/50 text-white rounded-full w-8 h-8 flex items-center justify-center"
+                  >
+                    ←
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      nextImage();
+                    }}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/30 hover:bg-white/50 text-white rounded-full w-8 h-8 flex items-center justify-center"
+                  >
+                    →
+                  </button>
+                  <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
+                    {memory.imageUrls.map((_, index) => (
+                      <div
+                        key={index}
+                        className={`w-2 h-2 rounded-full ${
+                          index === currentImageIndex ? 'bg-white' : 'bg-white/50'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+            </>
           ) : (
             <div className="absolute inset-0 flex items-center justify-center">
               <span className="text-4xl">💖</span>
@@ -49,8 +104,8 @@ export default function MemoryCard({ memory }: MemoryCardProps) {
         </div>
         
         <div className="p-4">
-          <h3 className="text-xl font-semibold text-purple-700 mb-2">{memory.title}</h3>
-          <p className="text-gray-600 line-clamp-2">{memory.description}</p>
+          <h3 className="text-lg font-semibold text-gray-800 mb-1">{memory.title}</h3>
+          <p className="text-gray-600 text-sm line-clamp-2">{memory.description}</p>
           
           {memory.location && (
             <div className="mt-3 flex items-center text-sm text-gray-500">

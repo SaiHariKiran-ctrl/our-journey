@@ -1,147 +1,179 @@
 'use client';
 
-import { useState } from 'react';
-import { todos as initialTodos } from '../../lib/todos';
-import { Todo } from '../../lib/todos';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { getTodos, deleteTodo } from '../../lib/db';
+import { Todo } from '../../lib/types';
+import dayjs from 'dayjs';
 
 export default function TodosPage() {
-  const [todos, setTodos] = useState<Todo[]>(initialTodos);
-  const [newTodo, setNewTodo] = useState({ title: '', description: '', dueDate: '' });
-  const [showAddForm, setShowAddForm] = useState(false);
+    const router = useRouter();
+    const [todos, setTodos] = useState<Todo[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
 
-  const toggleTodo = (id: string) => {
-    setTodos(todos.map(todo => 
-      todo.id === id ? { ...todo, isCompleted: !todo.isCompleted } : todo
-    ));
-  };
+    useEffect(() => {
+        const fetchTodos = async () => {
+            try {
+                const data = await getTodos();
+                setTodos(data);
+            } catch (error) {
+                console.error('Error fetching todos:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
 
-  const addTodo = (e: React.FormEvent) => {
-    e.preventDefault();
-    const newTodoItem: Todo = {
-      id: Date.now().toString(),
-      title: newTodo.title,
-      description: newTodo.description,
-      isCompleted: false,
-      createdAt: new Date().toISOString().split('T')[0],
-      dueDate: newTodo.dueDate
+        fetchTodos();
+    }, []);
+
+    const handleDelete = async (todoId: string) => {
+        if (window.confirm('Are you sure you want to delete this todo?')) {
+            try {
+                await deleteTodo(todoId);
+                setTodos(todos.filter((todo) => todo.id !== todoId));
+            } catch (error) {
+                console.error('Error deleting todo:', error);
+            }
+        }
     };
-    setTodos([...todos, newTodoItem]);
-    setNewTodo({ title: '', description: '', dueDate: '' });
-    setShowAddForm(false);
-  };
 
-  const deleteTodo = (id: string) => {
-    setTodos(todos.filter(todo => todo.id !== id));
-  };
+    if (isLoading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+            </div>
+        );
+    }
 
-  return (
-    <div className="min-h-screen p-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-4xl font-bold text-white">To-Do List</h1>
-          <Link href="/" className="text-primary hover:text-primary-dark">
-            ← Back to Home
-          </Link>
+    return (
+        <div className="min-h-screen p-4 sm:p-8">
+            <div className="max-w-4xl mx-auto">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0 mb-6 sm:mb-8">
+                    <h1 className="text-3xl sm:text-4xl font-bold text-white">
+                        To-Do List
+                    </h1>
+                    <div className="flex items-center gap-3 sm:gap-4">
+                        <Link
+                            href="/todos/add"
+                            className="bg-primary hover:bg-primary-dark text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg transition-colors text-sm sm:text-base">
+                            Add New Todo
+                        </Link>
+                        <Link
+                            href="/"
+                            className="text-primary hover:text-primary-dark text-sm sm:text-base">
+                            ← Back to Home
+                        </Link>
+                    </div>
+                </div>
+
+                <div className="grid gap-3 sm:gap-4">
+                    {todos.map((todo) => (
+                        <div
+                            key={todo.id}
+                            className="flex items-start gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
+                            <input
+                                type="checkbox"
+                                checked={todo.isCompleted}
+                                onChange={async () => {
+                                    try {
+                                        const response = await fetch(
+                                            '/api/todos/status',
+                                            {
+                                                method: 'POST',
+                                                headers: {
+                                                    'Content-Type':
+                                                        'application/json',
+                                                },
+                                                body: JSON.stringify({
+                                                    id: todo.id,
+                                                    isCompleted:
+                                                        !todo.isCompleted,
+                                                }),
+                                            }
+                                        );
+                                        if (response.ok) {
+                                            setTodos(
+                                                todos.map((t) =>
+                                                    t.id === todo.id
+                                                        ? {
+                                                              ...t,
+                                                              isCompleted:
+                                                                  !t.isCompleted,
+                                                          }
+                                                        : t
+                                                )
+                                            );
+                                        }
+                                    } catch (error) {
+                                        console.error(
+                                            'Error updating todo status:',
+                                            error
+                                        );
+                                    }
+                                }}
+                                className="mt-1 h-4 w-4 sm:h-5 sm:w-5 rounded border-gray-300 text-primary focus:ring-primary"
+                            />
+                            <div className="flex-1">
+                                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 sm:gap-0">
+                                    <div>
+                                        <h3
+                                            className={`text-lg sm:text-xl font-semibold text-white mb-1 ${
+                                                todo.isCompleted
+                                                    ? 'line-through text-gray-400'
+                                                    : ''
+                                            }`}>
+                                            {todo.title}
+                                        </h3>
+                                        {todo.description && (
+                                            <p className="text-text-secondary text-sm sm:text-base">
+                                                {todo.description}
+                                            </p>
+                                        )}
+                                        {todo.dueDate && (
+                                            <p className="text-sm text-gray-400 mt-1 sm:mt-2">
+                                                Due:{' '}
+                                                {dayjs(todo.dueDate).format(
+                                                    'MMMM D, YYYY'
+                                                )}
+                                            </p>
+                                        )}
+                                        {todo.tags && todo.tags.length > 0 && (
+                                            <div className="flex flex-wrap gap-2 mt-2">
+                                                {todo.tags.map((tag) => (
+                                                    <span
+                                                        key={tag}
+                                                        className="px-2 py-1 text-xs rounded-full bg-primary/20 text-primary">
+                                                        {tag}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="flex gap-2 sm:gap-3">
+                                        <button
+                                            onClick={() =>
+                                                router.push(
+                                                    `/todos/${todo.id}/edit`
+                                                )
+                                            }
+                                            className="text-primary hover:text-primary-dark text-sm sm:text-base">
+                                            Edit
+                                        </button>
+                                        <button
+                                            onClick={() =>
+                                                handleDelete(todo.id)
+                                            }
+                                            className="text-red-500 hover:text-red-700 text-sm sm:text-base">
+                                            Delete
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
         </div>
-        
-        <button
-          onClick={() => setShowAddForm(!showAddForm)}
-          className="mb-6 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
-        >
-          {showAddForm ? 'Cancel' : 'Add New Task'}
-        </button>
-
-        {showAddForm && (
-          <form onSubmit={addTodo} className="mb-8 glass-effect p-6 rounded-xl">
-            <div className="mb-4">
-              <label className="block text-text-secondary mb-2">Title</label>
-              <input
-                type="text"
-                value={newTodo.title}
-                onChange={(e) => setNewTodo({ ...newTodo, title: e.target.value })}
-                className="w-full p-2 rounded-lg bg-white/10 border border-gray-300"
-                required
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block text-text-secondary mb-2">Description</label>
-              <textarea
-                value={newTodo.description}
-                onChange={(e) => setNewTodo({ ...newTodo, description: e.target.value })}
-                className="w-full p-2 rounded-lg bg-white/10 border border-gray-300"
-                rows={3}
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block text-text-secondary mb-2">Due Date</label>
-              <input
-                type="date"
-                value={newTodo.dueDate}
-                onChange={(e) => setNewTodo({ ...newTodo, dueDate: e.target.value })}
-                className="w-full p-2 rounded-lg bg-white/10 border border-gray-300"
-              />
-            </div>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
-            >
-              Add Task
-            </button>
-          </form>
-        )}
-
-        <div className="glass-effect rounded-xl overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[800px]">
-              <thead>
-                <tr className="bg-white/10">
-                  <th className="p-4 text-left">Status</th>
-                  <th className="p-4 text-left">Title</th>
-                  <th className="p-4 text-left">Description</th>
-                  <th className="p-4 text-left">Due Date</th>
-                  <th className="p-4 text-left">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {todos.map((todo) => (
-                  <tr key={todo.id} className="border-t border-white/10">
-                    <td className="p-4">
-                      <input
-                        type="checkbox"
-                        checked={todo.isCompleted}
-                        onChange={() => toggleTodo(todo.id)}
-                        className="w-5 h-5 rounded"
-                      />
-                    </td>
-                    <td className="p-4">
-                      <span className={todo.isCompleted ? 'line-through text-text-secondary' : ''}>
-                        {todo.title}
-                      </span>
-                    </td>
-                    <td className="p-4">
-                      <span className={todo.isCompleted ? 'line-through text-text-secondary' : ''}>
-                        {todo.description}
-                      </span>
-                    </td>
-                    <td className="p-4">
-                      {todo.dueDate && new Date(todo.dueDate).toLocaleDateString()}
-                    </td>
-                    <td className="p-4">
-                      <button
-                        onClick={() => deleteTodo(todo.id)}
-                        className="text-red-500 hover:text-red-700"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-} 
+    );
+}

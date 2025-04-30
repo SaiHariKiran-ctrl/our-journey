@@ -160,8 +160,8 @@ export default function Home() {
     return (
         <div className="min-h-screen p-4 sm:p-6 md:p-8">
             <div className="max-w-7xl mx-auto">
-                <div className="hero rounded-2xl my-4 sm:my-6 md:my-8 backdrop-blur-md p-4 sm:p-6 md:p-8">
-                    {todayEvents.length > 0 ? (
+                {todayEvents.length > 0 ? (
+                    <div className="hero rounded-2xl my-4 sm:my-6 md:my-8 backdrop-blur-md p-4 sm:p-6 md:p-8">
                         <>
                             <div className="mb-6 sm:mb-8 md:mb-12">
                                 <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold text-white mb-4 sm:mb-6">
@@ -212,10 +212,10 @@ export default function Home() {
                                 </div>
                             )}
                         </>
-                    ) : (
-                        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold text-white mb-4 sm:mb-6"></h1>
-                    )}
-                </div>
+                    </div>
+                ) : (
+                    <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold text-white mb-4 sm:mb-6"></h1>
+                )}
 
                 <div className="glass-effect rounded-2xl p-4 sm:p-6 md:p-8 mb-4 sm:mb-6 md:mb-8 backdrop-blur-md">
                     <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-4 sm:mb-6">
